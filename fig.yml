@@ -1,0 +1,29 @@
+nginx:
+  build: nginx
+  ports:
+    - "80:80"
+    - "9000:9000"
+  links:
+    - mysql:mysql
+    - memcached:memcached
+  volumes:
+    - ../projects:/var/www
+    - sites:/etc/nginx/sites-enabled
+
+mysql:
+  image: tutum/mysql
+  ports:
+    - "3306:3306"
+  environment:
+    MYSQL_USER: admin
+    MYSQL_PASS: pass
+    STARTUP_SQL: /tmp/dump/init.sql
+  volumes:
+    - mysql:/tmp/dump
+
+memcached:
+  image: tutum/memcached
+  ports:
+    - "11211:11211"
+  environment:
+    MEMCACHED_PASS: password
