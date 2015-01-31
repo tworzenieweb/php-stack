@@ -4,7 +4,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # Install packages
 RUN apt-get update
-RUN apt-get install -y software-properties-common git build-essential curl supervisor wget php5-fpm php5-mysql php5-mcrypt php5-gd php5-memcached php5-curl php5-xdebug nano
+RUN apt-get install -y software-properties-common git build-essential curl supervisor wget php5-fpm php5-mysql php5-mcrypt php5-gd php5-memcached php5-curl php5-xdebug nano screen
 
 #install other dependances
 RUN add-apt-repository -y ppa:chris-lea/node.js
@@ -18,6 +18,10 @@ RUN /bin/bash -l -c "rvm requirements"
 RUN /bin/bash -l -c "rvm install 1.9.3"
 RUN /bin/bash -l -c "gem install sass"
 RUN /bin/bash -l -c "gem install compass"
+
+# install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 
 # Create required directories
 RUN mkdir -p /var/log/supervisor

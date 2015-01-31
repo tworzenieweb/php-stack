@@ -20,6 +20,7 @@ mysql:
     STARTUP_SQL: /tmp/dump/init.sql
   volumes:
     - mysql:/tmp/dump
+    - db:/var/lib/mysql
 
 memcached:
   image: tutum/memcached
