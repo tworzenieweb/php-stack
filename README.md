@@ -11,9 +11,22 @@ This repository contains the following modules:
 - NPM + Grunt + Bower
 - Memcache
 
-To be able to run this toolset you need to install Docker and Fig tool. 
+# Installation
+
+To be able to run this toolset you need to install docker and fig tool.
+
+https://docs.docker.com/installation/
+
+http://www.fig.sh/install.html
+
 If all is set just run
 `fig up` from command line inside of repository directory.
+
+```bash
+git clone https://github.com/tworzenieweb/php-stack.git
+cd php-stack
+fig run
+```
 
 Make sure you've got the following folder structure:
 
