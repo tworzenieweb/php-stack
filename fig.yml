@@ -3,9 +3,11 @@ nginx:
   ports:
     - "80:80"
     - "9000:9000"
+    - "1337:1337"
   links:
     - mysql:mysql
     - memcached:memcached
+    - postgres:postgres
   volumes:
     - ../projects:/var/www
     - sites:/etc/nginx/sites-enabled
@@ -22,9 +24,16 @@ mysql:
     - mysql:/tmp/dump
     - db:/var/lib/mysql
 
+postgres:
+  image: sameersbn/postgresql:9.1-2
+  ports:
+    - "5432:5432"
+  environment:
+    DB_USER: admin
+    DB_PASS: pass
+    DB_NAME: project
+
 memcached:
-  image: tutum/memcached
+  image: mini/memcached
   ports:
     - "11211:11211"
-  environment:
-    MEMCACHED_PASS: password
