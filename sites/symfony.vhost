@@ -30,5 +30,5 @@ server {
     }
 
     access_log /var/www/access.log;
-    error_log /var/www/error.log debug;
+    error_log /var/www/error.log error;
 }
