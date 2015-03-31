@@ -4,25 +4,13 @@ nginx:
     - "80:80"
     - "9000:9000"
     - "1337:1337"
+    - "9001"
+    - "22"
   links:
-    - mysql:mysql
-    - memcached:memcached
     - postgres:postgres
   volumes:
     - ../projects:/var/www
     - sites:/etc/nginx/sites-enabled
-
-mysql:
-  image: tutum/mysql
-  ports:
-    - "3306:3306"
-  environment:
-    MYSQL_USER: admin
-    MYSQL_PASS: pass
-    STARTUP_SQL: /tmp/dump/init.sql
-  volumes:
-    - mysql:/tmp/dump
-    - db:/var/lib/mysql
 
 postgres:
   image: sameersbn/postgresql:9.1-2
@@ -32,8 +20,3 @@ postgres:
     DB_USER: admin
     DB_PASS: pass
     DB_NAME: project
-
-memcached:
-  image: mini/memcached
-  ports:
-    - "11211:11211"
