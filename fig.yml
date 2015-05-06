@@ -1,30 +1,29 @@
 nginx:
   build: nginx
+  links:
+    - "mariadb:mariadb"
+    - "postgres:postgres"
   ports:
     - "80:80"
     - "9000:9000"
-  links:
-    - mysql:mysql
-    - memcached:memcached
   volumes:
     - ../projects:/var/www
     - sites:/etc/nginx/sites-enabled
 
-mysql:
-  image: tutum/mysql
+mariadb:
+  build: mariadb
   ports:
     - "3306:3306"
   environment:
-    MYSQL_USER: admin
-    MYSQL_PASS: pass
-    STARTUP_SQL: /tmp/dump/init.sql
-  volumes:
-    - mysql:/tmp/dump
-    - db:/var/lib/mysql
+    DEFAULT_PASS: dev
+    DEFAULT_USER: dev
+    DEFAULT_DATABASE: dev
 
-memcached:
-  image: tutum/memcached
+postgres:
+  image: sameersbn/postgresql:9.1-2
   ports:
-    - "11211:11211"
+    - "5432:5432"
   environment:
-    MEMCACHED_PASS: password
+    DB_USER: dev
+    DB_PASS: dev
+    DB_NAME: dev

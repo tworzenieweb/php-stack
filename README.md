@@ -4,11 +4,11 @@ This repository was made to help users developing PHP applications with instant 
 
 This repository contains the following modules:
 
-- PHP
+- PHP 5.6
 - Nginx
-- MySQL
+- MariaDB
 - Ruby + Sass + Compass
-- NPM + Grunt + Bower
+- NPM + Gulp + Bower
 - Memcache
 
 # Installation
