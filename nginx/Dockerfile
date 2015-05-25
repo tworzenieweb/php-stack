@@ -58,6 +58,11 @@ ADD php_cli.ini /etc/php5/cli/conf.d/40-custom.ini
 
 
 USER tworzenieweb
+
+RUN composer global require "phpunit/phpunit=4.6.*"
+RUN composer global require "squizlabs/php_codesniffer=*"
+RUN composer global require "escapestudios/symfony2-coding-standard=~2.0"
+
 ENV USER tworzenieweb
 ENV HOME /home/tworzenieweb
 
@@ -72,12 +77,28 @@ RUN /bin/bash -l -c "curl -L get.rvm.io | bash -s stable --gems=sass,compass"
 RUN /bin/bash -l -c "echo 'gem: --no-ri --no-rdoc' > ~/.gemrc"
 RUN /bin/bash -l -c "gem install bundler --no-ri --no-rdoc"
 
+RUN echo 'export PATH="$PATH:$HOME/.composer/vendor/bin"' >> /home/tworzenieweb/.zshrc
+RUN /home/tworzenieweb/.composer/vendor/bin/phpcs --config-set installed_paths /home/tworzenieweb/.composer/vendor/escapestudios/symfony2-coding-standard
+
+
 # Expose volumes
 VOLUME ["/var/www", "/etc/nginx/sites-enabled"]
 
-EXPOSE 80 9001
-
 WORKDIR /var/www
 USER root
+
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+RUN echo 'root:root' | chpasswd
+RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
+RUN echo fs.inotify.max_user_watches=524288 | tee -a /etc/sysctl.conf && sudo sysctl -p
+
+EXPOSE 80 9001 1337 22
 
 CMD ["/usr/bin/supervisord"]

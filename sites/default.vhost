@@ -1,7 +1,7 @@
 server {
   server_name de.v;
 
-  root        /var/www/default/web;
+  root        /var/www/zmr/web;
   index       app.php index.php;
 
   access_log off;
@@ -20,7 +20,6 @@ server {
     include fastcgi_params;
     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
     fastcgi_param HTTPS off;
-    fastcgi_param REMOTE_ADDR "127.0.0.1";
   }
 
   location ~ ^/app\.php(/|$) {

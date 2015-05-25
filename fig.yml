@@ -5,7 +5,9 @@ nginx:
     - "postgres:postgres"
   ports:
     - "80:80"
-    - "9000:9000"
+    - "9001"
+    - "1337:1337"
+    - "22"
   volumes:
     - ../projects:/var/www
     - sites:/etc/nginx/sites-enabled
