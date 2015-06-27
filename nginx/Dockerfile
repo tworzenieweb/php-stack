@@ -10,6 +10,8 @@ RUN usermod -a -G www-data tworzenieweb
 RUN apt-get update
 
 # Install packages
+RUN apt-get install -y pkg-config
+RUN apt-get install -y php5-intl
 RUN apt-get install -y nginx openssh-server software-properties-common git build-essential curl supervisor wget php5-common php5-fpm php5-mysql php5-pgsql php5-mcrypt php5-gd php5-memcached php5-curl php5-xdebug php5-dev nano screen zsh
 
 RUN chsh -s /bin/zsh
@@ -23,16 +25,16 @@ RUN apt-get -y install nodejs
 RUN npm install -g grunt-cli bower gulp
 # install composer + symfony installer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN curl -LsS https://symfony.com/installer -o /usr/local/bin/symfony
+RUN curl -LsS http://symfony.com/installer -o /usr/local/bin/symfony
 RUN chmod a+x /usr/local/bin/symfony
 
 #install zeromq
-RUN apt-get install pkg-config
 RUN wget http://download.zeromq.org/zeromq-4.0.5.tar.gz
 RUN tar -xzf zeromq-4.0.5.tar.gz && cd zeromq-4.0.5 && ./configure && make && make install && ldconfig
 RUN pecl install zmq-beta
 RUN echo "extension=zmq.so" > /etc/php5/fpm/conf.d/zmq.ini
 RUN cp /etc/php5/fpm/conf.d/zmq.ini /etc/php5/cli/conf.d/zmq.ini
+RUN pecl install intl
 
 # Create required directories
 RUN mkdir -p /var/log/supervisor
@@ -40,6 +42,8 @@ RUN chmod 755 /var/log/supervisor
 RUN mkdir -p /etc/nginx
 RUN mkdir -p /var/run/php5-fpm
 RUN chmod 777 /var/run/screen
+RUN touch /var/log/fpm-php.www.log
+RUN chown www-data.www-data /var/log/fpm-php.www.log
 
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 RUN sed -e 's/listen\.owner = www-data/listen.owner = tworzenieweb/' -i /etc/php5/fpm/pool.d/www.conf
@@ -97,8 +101,10 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
-RUN echo fs.inotify.max_user_watches=524288 | tee -a /etc/sysctl.conf && sudo sysctl -p
+#RUN echo fs.inotify.max_user_watches=524288 | tee -a /etc/sysctl.conf && sysctl -p
 
-EXPOSE 80 9001 1337 22
+RUN sed -i '1s/^/#/' /etc/php5/cli/conf.d/20-xdebug.ini
+
+EXPOSE 80 9001 1337 22 2407 9090
 
 CMD ["/usr/bin/supervisord"]
