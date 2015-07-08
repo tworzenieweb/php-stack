@@ -9,7 +9,7 @@ nginx:
     - "1337:1337"
     - "22"
   volumes:
-    - ../projects:/var/www
+    - www:/var/www
     - sites:/etc/nginx/sites-enabled
 
 mariadb:
