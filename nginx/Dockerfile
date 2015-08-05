@@ -60,12 +60,18 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD php.ini /etc/php5/fpm/conf.d/40-custom.ini
 ADD php_cli.ini /etc/php5/cli/conf.d/40-custom.ini
 
+# Remote debugging CLI
+RUN echo "export VISIBLE=now" >> /etc/profile
+RUN echo 'export XDEBUG_CONFIG="idekey=docker remote_host=0.0.0.0 remote_port=9001"' >> /etc/profile
+
 
 USER tworzenieweb
 
 RUN composer global require "phpunit/phpunit=4.6.*"
 RUN composer global require "squizlabs/php_codesniffer=*"
 RUN composer global require "escapestudios/symfony2-coding-standard=~2.0"
+RUN composer global require "phpspec/phpspec=~2.0"
+RUN composer global require --dev "memio/spec-gen:^0.4"
 
 ENV USER tworzenieweb
 ENV HOME /home/tworzenieweb
