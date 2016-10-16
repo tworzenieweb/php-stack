@@ -1,116 +1,58 @@
 FROM ubuntu:trusty
 MAINTAINER Luke Adamczewski "tworzenieweb@gmail.com"
+ENV DEBIAN_FRONTEND noninteractive
+ENV TERM linux
 
-RUN adduser --disabled-password --gecos '' tworzenieweb
-RUN adduser tworzenieweb sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers 
-RUN usermod -a -G www-data tworzenieweb
+# Install basic packages
+RUN apt-get update && apt-get install -y curl pkg-config git build-essential supervisor wget nano zsh
 
+# installing php
+COPY php.sh ./php.sh
+RUN chmod +x ./php.sh
+RUN ./php.sh
 
-RUN apt-get update
+ADD php.ini /etc/php/7.0/fpm/conf.d/40-custom.ini
+ADD php_cli.ini /etc/php/7.0/cli/conf.d/40-custom.ini
 
-# Install packages
-RUN apt-get install -y pkg-config
-RUN apt-get install -y php5-intl
-RUN apt-get install -y nginx openssh-server software-properties-common git build-essential curl supervisor wget php5-common php5-fpm php5-mysql php5-pgsql php5-mcrypt php5-gd php5-memcached php5-curl php5-xdebug php5-dev nano screen zsh
+COPY nginx.sh ./nginx.sh
+RUN chmod +x ./nginx.sh 
+RUN ./nginx.sh
+COPY nginx.conf /etc/nginx/
 
-RUN chsh -s /bin/zsh
-RUN apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+COPY node.sh ./node.sh
+RUN chmod +x ./node.sh 
+RUN ./node.sh
 
-#install other dependances
-RUN add-apt-repository -y ppa:chris-lea/node.js
-RUN apt-get update
-RUN apt-get -y install nodejs
-RUN npm install -g grunt-cli bower gulp
-# install composer + symfony installer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN curl -LsS http://symfony.com/installer -o /usr/local/bin/symfony
-RUN chmod a+x /usr/local/bin/symfony
+COPY ruby.sh ./ruby.sh
+RUN chmod +x ./ruby.sh
+RUN ./ruby.sh
 
-#install zeromq
-RUN wget http://download.zeromq.org/zeromq-4.0.5.tar.gz
-RUN tar -xzf zeromq-4.0.5.tar.gz && cd zeromq-4.0.5 && ./configure && make && make install && ldconfig
-RUN pecl install zmq-beta
-RUN echo "extension=zmq.so" > /etc/php5/fpm/conf.d/zmq.ini
-RUN cp /etc/php5/fpm/conf.d/zmq.ini /etc/php5/cli/conf.d/zmq.ini
-RUN pecl install intl
-
-# Create required directories
+ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN mkdir -p /var/log/supervisor
 RUN chmod 755 /var/log/supervisor
-RUN mkdir -p /etc/nginx
-RUN mkdir -p /var/run/php5-fpm
-RUN chmod 777 /var/run/screen
-RUN touch /var/log/fpm-php.www.log
-RUN chown www-data.www-data /var/log/fpm-php.www.log
-
-RUN echo "daemon off;" >> /etc/nginx/nginx.conf
-RUN sed -e 's/listen\.owner = www-data/listen.owner = tworzenieweb/' -i /etc/php5/fpm/pool.d/www.conf
-#RUN sed -e 's/;listen\.group = www-data/listen.group = tworzenieweb/' -i /etc/php5/fpm/pool.d/www.conf
-RUN sed -e 's/user = www-data/user = tworzenieweb/' -i /etc/php5/fpm/pool.d/www.conf
-#RUN sed -e 's/group = www-data/group = tworzenieweb/' -i /etc/php5/fpm/pool.d/www.conf
-
-RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf
-RUN sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /etc/php5/fpm/pool.d/www.conf
-RUN sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g" /etc/php5/fpm/php.ini
-
-# Add configuration files
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-ADD php.ini /etc/php5/fpm/conf.d/40-custom.ini
-ADD php_cli.ini /etc/php5/cli/conf.d/40-custom.ini
-
-# Remote debugging CLI
-RUN echo "export VISIBLE=now" >> /etc/profile
-RUN echo 'export XDEBUG_CONFIG="idekey=docker remote_host=0.0.0.0 remote_port=9001"' >> /etc/profile
-
-
-USER tworzenieweb
-
-RUN composer global require "phpunit/phpunit=4.6.*"
-RUN composer global require "squizlabs/php_codesniffer=*"
-RUN composer global require "escapestudios/symfony2-coding-standard=~2.0"
-RUN composer global require "phpspec/phpspec=~2.0"
-RUN composer global require --dev "memio/spec-gen:^0.4"
 
 ENV USER tworzenieweb
 ENV HOME /home/tworzenieweb
 
-ADD screenrc /home/tworzenieweb/.screenrc
+USER tworzenieweb
+
 ADD gitconfig /home/tworzenieweb/.gitconfig
+RUN git config --global user.email "tworzenieweb@gmail.com"
+RUN git config --global user.name "Luke Adamczewski"
+RUN git config --global credential.helper 'cache --timeout=3600'
 
 RUN git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 RUN cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
 
-RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
-RUN /bin/bash -l -c "curl -L get.rvm.io | bash -s stable --gems=sass,compass"
-RUN /bin/bash -l -c "echo 'gem: --no-ri --no-rdoc' > ~/.gemrc"
-RUN /bin/bash -l -c "gem install bundler --no-ri --no-rdoc"
+COPY extra.sh ./extra.sh
+RUN chmod+x ./extra.sh
+RUN ./extra.sh
 
-RUN echo 'export PATH="$PATH:$HOME/.composer/vendor/bin"' >> /home/tworzenieweb/.zshrc
-RUN /home/tworzenieweb/.composer/vendor/bin/phpcs --config-set installed_paths /home/tworzenieweb/.composer/vendor/escapestudios/symfony2-coding-standard
-
-
-# Expose volumes
-VOLUME ["/var/www", "/etc/nginx/sites-enabled"]
+VOLUME ["/var/www", "/etc/nginx/conf.d"]
 
 WORKDIR /var/www
 USER root
 
-RUN apt-get update && apt-get install -y openssh-server
-RUN mkdir /var/run/sshd
-RUN echo 'root:root' | chpasswd
-RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+EXPOSE 80 9001
 
-# SSH login fix. Otherwise user is kicked off after login
-RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-
-ENV NOTVISIBLE "in users profile"
-RUN echo "export VISIBLE=now" >> /etc/profile
-#RUN echo fs.inotify.max_user_watches=524288 | tee -a /etc/sysctl.conf && sysctl -p
-
-RUN sed -i '1s/^/#/' /etc/php5/cli/conf.d/20-xdebug.ini
-
-EXPOSE 80 9001 1337 22 2407 9090
-
-CMD ["/usr/bin/supervisord"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

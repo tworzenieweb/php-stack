@@ -2,30 +2,19 @@ nginx:
   build: nginx
   links:
     - "mariadb:mariadb"
-    - "postgres:postgres"
   ports:
     - "80:80"
     - "9001"
-    - "1337:1337"
-    - "22"
+    - "4000:4000"
   volumes:
     - ../projects:/var/www
-    - sites:/etc/nginx/sites-enabled
+    - ./sites:/etc/nginx/conf.d
 
 mariadb:
   build: mariadb
   ports:
-    - "3306:3306"
+    - "3307:3306"
   environment:
     DEFAULT_PASS: dev
     DEFAULT_USER: dev
     DEFAULT_DATABASE: dev
-
-postgres:
-  image: sameersbn/postgresql:9.1-2
-  ports:
-    - "5432:5432"
-  environment:
-    DB_USER: dev
-    DB_PASS: dev
-    DB_NAME: dev

@@ -1,37 +1,30 @@
 server {
-  server_name de.v;
-
-  root        /var/www/zmr/web;
-  index       app.php index.php;
-
-  access_log off;
-  error_log /var/www/error.log info;
+  server_name default;
+  root        /var/www/default;
+  index       index.php;
 
   client_max_body_size 100M;
   fastcgi_read_timeout 1800;
 
   location / {
-    try_files $uri /app.php$is_args$args;
+    try_files $uri $uri/ /index.php$is_args$args;
   }
 
-  location ~ ^/(app_dev|config)\.php(/|$) {
-    fastcgi_pass unix:/var/run/php5-fpm.sock;
-    fastcgi_split_path_info ^(.+\.php)(/.*)$;
-    include fastcgi_params;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    fastcgi_param HTTPS off;
+  location /status {
+     access_log off;
+     allow all;
+     deny all;
+     include /etc/nginx/fastcgi_params;
+     fastcgi_param SCRIPT_FILENAME /status;
+     fastcgi_pass unix:/run/php/php7.0-fpm.sock;
   }
 
-  location ~ ^/app\.php(/|$) {
-    fastcgi_pass unix:/var/run/php5-fpm.sock;
-    fastcgi_split_path_info ^(.+\.php)(/.*)$;
-    include fastcgi_params;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    fastcgi_param HTTPS off;
-    # Prevents URIs that include the front controller. This will 404:
-    # http://domain.tld/app.php/some-path
-    # Remove the internal directive to allow URIs like this
-    internal;
+  location /ping {
+     access_log off;
+     allow all;
+     include fastcgi_params;
+     fastcgi_param SCRIPT_FILENAME /ping;
+     fastcgi_pass unix:/run/php/php7.0-fpm.sock;
   }
 
   location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
@@ -40,4 +33,11 @@ server {
     access_log    off;
   }
 
+  location ~ \.php$ {
+    try_files     $uri =404;
+    include       fastcgi_params;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_pass  unix:/run/php/php7.0-fpm.sock;
+  }
 }
