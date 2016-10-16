@@ -1,17 +1,30 @@
 server {
   server_name default;
-
-  root        /var/www/default/web;
+  root        /var/www/default;
   index       index.php;
-
-  access_log /var/www/access.log;
-  error_log /var/www/error.log warn;
 
   client_max_body_size 100M;
   fastcgi_read_timeout 1800;
 
   location / {
-    try_files $uri $uri/ /index.php;
+    try_files $uri $uri/ /index.php$is_args$args;
+  }
+
+  location /status {
+     access_log off;
+     allow all;
+     deny all;
+     include /etc/nginx/fastcgi_params;
+     fastcgi_param SCRIPT_FILENAME /status;
+     fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+  }
+
+  location /ping {
+     access_log off;
+     allow all;
+     include fastcgi_params;
+     fastcgi_param SCRIPT_FILENAME /ping;
+     fastcgi_pass unix:/run/php/php7.0-fpm.sock;
   }
 
   location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
@@ -25,6 +38,6 @@ server {
     include       fastcgi_params;
     fastcgi_index index.php;
     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    fastcgi_pass  unix:/var/run/php5-fpm.sock;
+    fastcgi_pass  unix:/run/php/php7.0-fpm.sock;
   }
 }

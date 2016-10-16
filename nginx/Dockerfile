@@ -1,40 +1,58 @@
-FROM tutum/nginx:latest
+FROM ubuntu:trusty
+MAINTAINER Luke Adamczewski "tworzenieweb@gmail.com"
+ENV DEBIAN_FRONTEND noninteractive
+ENV TERM linux
 
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+# Install basic packages
+RUN apt-get update && apt-get install -y curl pkg-config git build-essential supervisor wget nano zsh
 
-# Install packages
-RUN apt-get update
-RUN apt-get install -y software-properties-common git build-essential curl supervisor wget php5-fpm php5-mysql php5-mcrypt php5-gd php5-memcached php5-curl php5-xdebug nano screen
+# installing php
+COPY php.sh ./php.sh
+RUN chmod +x ./php.sh
+RUN ./php.sh
 
-#install other dependances
-RUN add-apt-repository -y ppa:chris-lea/node.js
-RUN apt-get update
-RUN apt-get -y install nodejs
-RUN npm install -g grunt-cli bower
+ADD php.ini /etc/php/7.0/fpm/conf.d/40-custom.ini
+ADD php_cli.ini /etc/php/7.0/cli/conf.d/40-custom.ini
 
-RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
-RUN curl -sSL https://get.rvm.io | bash -s stable
-RUN /bin/bash -l -c "rvm requirements"
-RUN /bin/bash -l -c "rvm install 1.9.3"
-RUN /bin/bash -l -c "gem install sass"
-RUN /bin/bash -l -c "gem install compass"
+COPY nginx.sh ./nginx.sh
+RUN chmod +x ./nginx.sh 
+RUN ./nginx.sh
+COPY nginx.conf /etc/nginx/
 
-# install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY node.sh ./node.sh
+RUN chmod +x ./node.sh 
+RUN ./node.sh
 
+COPY ruby.sh ./ruby.sh
+RUN chmod +x ./ruby.sh
+RUN ./ruby.sh
 
-# Create required directories
-RUN mkdir -p /var/log/supervisor
-RUN mkdir -p /etc/nginx
-RUN mkdir -p /var/run/php5-fpm
-
-# Add configuration files
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-ADD php.ini /etc/php5/fpm/conf.d/40-custom.ini
+RUN mkdir -p /var/log/supervisor
+RUN chmod 755 /var/log/supervisor
 
-# Expose volumes
-VOLUME ["/var/www", "/etc/nginx/sites-enabled"]
+ENV USER tworzenieweb
+ENV HOME /home/tworzenieweb
 
-EXPOSE 80 9000
+USER tworzenieweb
 
-CMD ["/usr/bin/supervisord"]
+ADD gitconfig /home/tworzenieweb/.gitconfig
+RUN git config --global user.email "tworzenieweb@gmail.com"
+RUN git config --global user.name "Luke Adamczewski"
+RUN git config --global credential.helper 'cache --timeout=3600'
+
+RUN git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+RUN cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
+
+COPY extra.sh ./extra.sh
+RUN chmod+x ./extra.sh
+RUN ./extra.sh
+
+VOLUME ["/var/www", "/etc/nginx/conf.d"]
+
+WORKDIR /var/www
+USER root
+
+EXPOSE 80 9001
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
