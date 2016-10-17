@@ -45,7 +45,7 @@ RUN git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 RUN cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
 
 COPY extra.sh ./extra.sh
-RUN chmod+x ./extra.sh
+RUN chmod +x ./extra.sh
 RUN ./extra.sh
 
 VOLUME ["/var/www", "/etc/nginx/conf.d"]
