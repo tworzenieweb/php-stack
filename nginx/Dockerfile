@@ -2,6 +2,10 @@ FROM ubuntu:trusty
 MAINTAINER Luke Adamczewski "tworzenieweb@gmail.com"
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
+ARG DOCKER_USER
+ENV DOCKER_USER ${DOCKER_USER:-tworzenieweb}
+
+RUN echo "DOCKER USER SET TO $DOCKER_USER"
 
 # Install basic packages
 RUN apt-get update && apt-get install -y curl pkg-config git build-essential supervisor wget nano zsh
@@ -31,22 +35,24 @@ ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN mkdir -p /var/log/supervisor
 RUN chmod 755 /var/log/supervisor
 
-ENV USER tworzenieweb
-ENV HOME /home/tworzenieweb
+ENV USER $DOCKER_USER
+ENV HOME /home/$DOCKER_USER
 
-USER tworzenieweb
+USER $DOCKER_USER
 
-ADD gitconfig /home/tworzenieweb/.gitconfig
-RUN git config --global user.email "tworzenieweb@gmail.com"
-RUN git config --global user.name "Luke Adamczewski"
-RUN git config --global credential.helper 'cache --timeout=3600'
+ADD gitconfig /home/$DOCKER_USER/.gitconfig
 
 RUN git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 RUN cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
 
 COPY extra.sh ./extra.sh
-RUN chmod+x ./extra.sh
+RUN chmod +x ./extra.sh
 RUN ./extra.sh
+
+RUN mkdir -p /home/$DOCKER_USER/.ssh
+COPY private_key /home/$DOCKER_USER/.ssh/private_key
+RUN chmod +r /home/$DOCKER_USER/.ssh/private_key
+RUN echo "    IdentityFile /home/$DOCKER_USER/.ssh/private_key" >> /home/$DOCKER_USER/.ssh/config
 
 VOLUME ["/var/www", "/etc/nginx/conf.d"]
 

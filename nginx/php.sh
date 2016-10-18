@@ -26,13 +26,13 @@ sed -i '/^;ping\.path/s/^;//' /etc/php/7.0/fpm/pool.d/www.conf
 sed -i '/^;pm\.status_path/s/^;//' /etc/php/7.0/fpm/pool.d/www.conf
 
 
-sed -e 's/listen\.owner = www-data/listen.owner = tworzenieweb/' -i /etc/php/7.0/fpm/pool.d/www.conf
-sed -e 's/;listen\.group = www-data/listen.group = tworzenieweb/' -i /etc/php/7.0/fpm/pool.d/www.conf
-sed -e 's/user = www-data/user = tworzenieweb/' -i /etc/php/7.0/fpm/pool.d/www.conf
-sed -e 's/group = www-data/group = tworzenieweb/' -i /etc/php/7.0/fpm/pool.d/www.conf
+sed -e "s/listen\.owner = www-data/listen.owner = $DOCKER_USER/" -i /etc/php/7.0/fpm/pool.d/www.conf
+sed -e "s/;listen\.group = www-data/listen.group = $DOCKER_USER/" -i /etc/php/7.0/fpm/pool.d/www.conf
+sed -e "s/user = www-data/user = $DOCKER_USER/" -i /etc/php/7.0/fpm/pool.d/www.conf
+sed -e "s/group = www-data/group = $DOCKER_USER/" -i /etc/php/7.0/fpm/pool.d/www.conf
 sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /etc/php/7.0/fpm/pool.d/www.conf
 
-adduser --disabled-password --gecos '' tworzenieweb
-adduser tworzenieweb sudo
+adduser --disabled-password --gecos '' $DOCKER_USER
+adduser $DOCKER_USER sudo
 echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers 
-usermod -a -G www-data tworzenieweb
+usermod -a -G www-data $DOCKER_USER

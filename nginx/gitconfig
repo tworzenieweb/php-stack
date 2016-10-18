@@ -1,5 +1,5 @@
 [user]
-	email = tworzenieweb@gmail.com
+	email = 
 	name = Luke Adamczewski
 [credential]
 	helper = cache --timeout=3600

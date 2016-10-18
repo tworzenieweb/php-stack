@@ -1,8 +1,8 @@
 server {
   server_name de.v;
 
-  root        /var/www/default/web;
-  index       app.php;
+  root        /var/www/default/public;
+  index       index.php;
 
   access_log off;
   error_log /var/www/error.log info;
@@ -11,7 +11,7 @@ server {
   fastcgi_read_timeout 1800;
 
   location / {
-    try_files $uri /app.php$is_args$args;
+    try_files $uri /index.php$is_args$args;
   }
 
   location ~ ^/(app_dev|config)\.php(/|$) {
@@ -22,7 +22,7 @@ server {
     fastcgi_param HTTPS off;
   }
 
-  location ~ ^/app\.php(/|$) {
+  location ~ ^/index\.php(/|$) {
     fastcgi_pass unix:/run/php/php7.0-fpm.sock;
     fastcgi_split_path_info ^(.+\.php)(/.*)$;
     include fastcgi_params;

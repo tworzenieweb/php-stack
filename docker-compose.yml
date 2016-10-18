@@ -1,20 +1,25 @@
-nginx:
-  build: nginx
-  links:
-    - "mariadb:mariadb"
-  ports:
-    - "80:80"
-    - "9001"
-    - "4000:4000"
-  volumes:
-    - ../projects:/var/www
-    - ./sites:/etc/nginx/conf.d
+version: '2'
+services:
+  nginx:
+    build:
+      context: nginx
+      args:
+        DOCKER_USER: ladamczewski
+    links:
+      - "mariadb:mariadb"
+    ports:
+      - "80:80"
+      - "9001"
+      - "4000:4000"
+    volumes:
+      - ../projects:/var/www
+      - ./sites:/etc/nginx/conf.d
 
-mariadb:
-  build: mariadb
-  ports:
-    - "3307:3306"
-  environment:
-    DEFAULT_PASS: dev
-    DEFAULT_USER: dev
-    DEFAULT_DATABASE: dev
+  mariadb:
+    build: mariadb
+    ports:
+      - "3306:3306"
+    environment:
+      DEFAULT_PASS: dev
+      DEFAULT_USER: dev
+      DEFAULT_DATABASE: dev
